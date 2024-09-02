@@ -112,7 +112,7 @@ class Program
         for (int i = 0; i < standings.Count; i++)
         {
             var team = standings[i];
-            Console.WriteLine($"        {i + 1}. {team.Team,-10} {team.Wins} / {team.Losses} / {team.Points} / {team.ScoredPoints} / {team.ConcededPoints} / {team.ScoredPoints - team.ConcededPoints}");
+            Console.WriteLine($"        {i + 1}. {team.Team,-10} {team.Wins}  /  {team.Losses}  / {team.Points} / {team.ScoredPoints} / {team.ConcededPoints} / {team.ScoredPoints - team.ConcededPoints}");
         }
     }
 
