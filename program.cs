@@ -101,7 +101,7 @@ class Program
     // Ispis podataka za grupe A, B i C
     static void DisplayGroupStandings(List<Timovi> group, string groupName)
     {
-       //Console.WriteLine($"\nKonačan plasman u grupama:");
+        //Console.WriteLine($"\nKonačan plasman u grupama:");
         Console.WriteLine($"    Grupa {groupName} (Ime - pobede/porazi/bodovi/postignuti koševi/primljeni koševi/koš razlika):");
 
         var standings = group.OrderByDescending(t => t.Points)
@@ -122,11 +122,14 @@ class Program
         allTeams.AddRange(groups.A);
         allTeams.AddRange(groups.B);
         allTeams.AddRange(groups.C);
-        var rankedTeams = allTeams.OrderBy(t => t.Points)
+
+        // Ispravka: Rangiraj timove ispravno po bodovima i ostalim kriterijumima
+        var rankedTeams = allTeams.OrderByDescending(t => t.Points)
                                   .ThenByDescending(t => t.ScoredPoints - t.ConcededPoints)
                                   .ThenByDescending(t => t.ScoredPoints)
                                   .ToList();
-        return rankedTeams.Take(8).ToList();
+
+        return rankedTeams.Take(8).ToList(); // Uzmi top 8 timova
     }
 
     static Dictionary<string, List<Timovi>> DrawEliminationPhase(List<Timovi> rankedTeams)
@@ -149,74 +152,7 @@ class Program
             }
         }
 
-        Random rnd = new Random();
-        List<Tuple<Timovi, Timovi>> quarterfinals = new List<Tuple<Timovi, Timovi>>();
-
-       // Console.WriteLine("\nFormiranje četvrtfinala:");
-        while (pots["D"].Count > 0 && pots["G"].Count > 0)
-        {
-            if (pots["D"].Count == 0 || pots["G"].Count == 0)
-            {
-           //     Console.WriteLine("Nema dovoljno timova za formiranje mečeva u grupama D i G.");
-                break;
-            }
-
-            Timovi teamD = pots["D"][rnd.Next(pots["D"].Count)];
-            Timovi teamG = pots["G"][rnd.Next(pots["G"].Count)];
-
-            if (teamD.Team != teamG.Team)
-            {
-                quarterfinals.Add(Tuple.Create(teamD, teamG));
-                pots["D"].Remove(teamD);
-                pots["G"].Remove(teamG);
-              //  Console.WriteLine($"    {teamD.Team} vs {teamG.Team}");
-            }
-            else
-            {
-                // Ova linija može dovesti do problema ako su u istom potu
-               // Console.WriteLine($"    Izbegnuta grupa rematch: {teamD.Team} i {teamG.Team} - Grupa: {teamD.GroupName}");
-                break;
-            }
-        }
-
-        while (pots["E"].Count > 0 && pots["F"].Count > 0)
-        {
-            if (pots["E"].Count == 0 || pots["F"].Count == 0)
-            {
-                Console.WriteLine("Nema dovoljno timova za formiranje mečeva u grupama E i F.");
-                break;
-            }
-
-            Timovi teamE = pots["E"][rnd.Next(pots["E"].Count)];
-            Timovi teamF = pots["F"][rnd.Next(pots["F"].Count)];
-
-            if (teamE.Team != teamF.Team)
-            {
-                quarterfinals.Add(Tuple.Create(teamE, teamF));
-                pots["E"].Remove(teamE);
-                pots["F"].Remove(teamF);
-            //    Console.WriteLine($"    {teamE.Team} vs {teamF.Team}");
-            }
-            else
-            {
-                // Ova linija može dovesti do problema ako su u istom potu
-                Console.WriteLine($"    Izbegnuta grupa rematch: {teamE.Team} i {teamF.Team} - Grupa: {teamE.GroupName}");
-
-                break;
-            }
-        }
-
-       // Console.WriteLine("\nEliminaciona faza:");
-        Dictionary<string, List<Timovi>> eliminationMatches = new Dictionary<string, List<Timovi>>();
-        char matchLabel = 'A';
-
-        foreach (var match in quarterfinals)
-        {
-            eliminationMatches[$"Match {matchLabel}"] = new List<Timovi> { match.Item1, match.Item2 };
-            matchLabel++;
-        }
-
-        return eliminationMatches;
+        return pots;
     }
 
     static void SimulateEliminationPhase(Dictionary<string, List<Timovi>> eliminationMatches)
@@ -288,8 +224,8 @@ class Program
             Console.WriteLine($"    {team1.Team} - {team2.Team} ({team1Points}:{team2Points})");
             var pobeda = team1Points > team2Points ? team1 : team2;
             semiFinalPobeda.Add(pobeda);
-         
-             var loser = team1Points > team2Points ? team2 : team1;
+
+            var loser = team1Points > team2Points ? team2 : team1;
             semiFinalLosers.Add(loser);
         }
 
@@ -301,7 +237,7 @@ class Program
     }
 
 
- 
+
 
 
     static Tuple<Timovi, Timovi, int, int> SimulateThirdPlaceMatch(List<Timovi> semiFinalLosers)
@@ -319,7 +255,7 @@ class Program
     {
         Console.WriteLine("\nFinale:");
 
-       
+
         var (team1, team2) = (semiFinalLosers[0], semiFinalLosers[1]);
         var (winner, team1Points, team2Points) = SimulateMatchWithScores(team1, team2);
 
@@ -353,13 +289,20 @@ class Program
     static Tuple<Timovi, int, int> SimulateMatchWithScores(Timovi team1, Timovi team2)
     {
         Random rnd = new Random();
-        int team1Points = GenerateMatchPoints(team1.FIBARanking);
-        int team2Points = GenerateMatchPoints(team2.FIBARanking);
+        int team1Points, team2Points;
+        Timovi winner;
 
-        var winner = team1Points > team2Points ? team1 : team2;
+        do
+        {
+            team1Points = GenerateMatchPoints(team1.FIBARanking);
+            team2Points = GenerateMatchPoints(team2.FIBARanking);
+        } while (team1Points == team2Points); 
+
+        winner = team1Points > team2Points ? team1 : team2;
 
         return Tuple.Create(winner, team1Points, team2Points);
     }
+
 
 
 
