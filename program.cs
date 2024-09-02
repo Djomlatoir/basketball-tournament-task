@@ -33,14 +33,11 @@ class Program
         // Čitanje JSON fajla
         string jsonString = File.ReadAllText("groups.json");
         Group groups = JsonSerializer.Deserialize<Group>(jsonString);
-      //  string exibitionData = File.ReadAllText("exibitions.json");
-       // Console.WriteLine(jsonString);
 
         // Simulacija podataka za grupe A, B i C
         SimulateGroupStage(groups.A, "A");
         SimulateGroupStage(groups.B, "B");
         SimulateGroupStage(groups.C, "C");
-
         // Ispis podataka za grupe A, B i C
         DisplayGroupStandings(groups.A, "A");
         DisplayGroupStandings(groups.B, "B");
@@ -210,13 +207,12 @@ class Program
 
         Console.WriteLine("\nEliminaciona faza:");
         Dictionary<string, List<Timovi>> eliminationMatches = new Dictionary<string, List<Timovi>>();
-        char potName = 'A';
+        char matchLabel = 'A';
 
         foreach (var match in quarterfinals)
         {
-            eliminationMatches[$"Match {potName}"] = new List<Timovi> { match.Item1, match.Item2 };
-            Console.WriteLine($"    {match.Item1.Team} - {match.Item2.Team}");
-            potName++;
+            eliminationMatches[$"Match {matchLabel}"] = new List<Timovi> { match.Item1, match.Item2 };
+            matchLabel++;
         }
 
         return eliminationMatches;
@@ -227,27 +223,23 @@ class Program
         Console.WriteLine("\nČetvrtfinale:");
 
         List<Tuple<Timovi, Timovi, int, int>> quarterFinalResults = new List<Tuple<Timovi, Timovi, int, int>>();
-
-        if (eliminationMatches.Count == 0)
-        {
-            Console.WriteLine("Nema mečeva za simulaciju.");
-            return;
-        }
+        List<Timovi> quarterFinalWinners = new List<Timovi>();
 
         foreach (var match in eliminationMatches)
         {
             var teams = match.Value;
-            if (teams.Count != 2)
-            {
-                Console.WriteLine($"Greška u meču {match.Key}: očekivana dva tima, ali je pronađeno {teams.Count}.");
-                continue;
-            }
-
             var (winner, team1Points, team2Points) = SimulateMatchWithScores(teams[0], teams[1]);
 
             quarterFinalResults.Add(Tuple.Create(teams[0], teams[1], team1Points, team2Points));
+            quarterFinalWinners.Add(winner);
 
             Console.WriteLine($"    {teams[0].Team} - {teams[1].Team} ({team1Points}:{team2Points})");
+        }
+
+        Console.WriteLine("\nPobednici četvrtfinala:");
+        foreach (var winner in quarterFinalWinners)
+        {
+            Console.WriteLine($"    {winner.Team}");
         }
 
         SimulateSemiFinals(quarterFinalResults);
@@ -258,62 +250,103 @@ class Program
     {
         Console.WriteLine("\nPolufinale:");
 
-        List<Tuple<Timovi, Timovi, int, int>> semiFinalResults = new List<Tuple<Timovi, Timovi, int, int>>();
+        List<Timovi> semiFinalWinners = new List<Timovi>();
         List<Timovi> semiFinalLosers = new List<Timovi>();
+        List<Timovi> semiFinalPobeda = new List<Timovi>();
 
-        for (int i = 0; i < quarterFinalResults.Count; i += 2)
+        foreach (var result in quarterFinalResults)
         {
-            var (team1, team2, team1Points, team2Points) = quarterFinalResults[i];
+            var (team1, team2, team1Points, team2Points) = result;
+            var winner = team1Points > team2Points ? team1 : team2;
 
-            var (winner, winnerPoints, loserPoints) = SimulateMatchWithScores(team1, team2);
-            var loser = (winner == team1) ? team2 : team1;
 
-            semiFinalResults.Add(Tuple.Create(winner, loser, winnerPoints, loserPoints));
-            semiFinalLosers.Add(loser);
+            semiFinalWinners.Add(winner);
 
+        }
+
+        if (semiFinalWinners.Count < 4)
+        {
+            Console.WriteLine("Nema dovoljno pobednika za polufinale.");
+            return;
+        }
+
+        var semiFinalMatches = new List<Tuple<Timovi, Timovi>>();
+
+        semiFinalMatches.Add(Tuple.Create(semiFinalWinners[0], semiFinalWinners[1]));
+        semiFinalMatches.Add(Tuple.Create(semiFinalWinners[2], semiFinalWinners[3]));
+
+        List<Tuple<Timovi, Timovi, int, int>> semiFinalResults = new List<Tuple<Timovi, Timovi, int, int>>();
+
+        foreach (var match in semiFinalMatches)
+        {
+
+            var (team1, team2) = match;
+            var (winner, team1Points, team2Points) = SimulateMatchWithScores(team1, team2);
+
+            semiFinalResults.Add(Tuple.Create(team1, team2, team1Points, team2Points));
             Console.WriteLine($"    {team1.Team} - {team2.Team} ({team1Points}:{team2Points})");
-        }
-        var thirdPlaceWinner = SimulateThirdPlaceMatch(semiFinalLosers);
-        var finalWinner = SimulateFinal(semiFinalResults);
-
-
-        DisplayMedalWinners(finalWinner.Item1, semiFinalResults.First(t => t.Item1 != finalWinner.Item1).Item1, thirdPlaceWinner.Item1);
-    }
-
-    static Tuple<Timovi, int, int> SimulateFinal(List<Tuple<Timovi, Timovi, int, int>> semiFinalResults)
-    {
-        Console.WriteLine("\nFinale:");
-
-        if (semiFinalResults.Count != 2)
-        {
-            Console.WriteLine("Greška: Očekivana dva tima za finale.");
-            return null;
+            var pobeda = team1Points > team2Points ? team1 : team2;
+            semiFinalPobeda.Add(pobeda);
+         
+             var loser = team1Points > team2Points ? team2 : team1;
+            semiFinalLosers.Add(loser);
         }
 
-        var (team1, team2, team1Points, team2Points) = semiFinalResults[0];
+        var thirdPlaceResults = SimulateThirdPlaceMatch(semiFinalLosers);
 
-        var (winner, winnerPoints, loserPoints) = SimulateMatchWithScores(team1, team2);
+        var finalResults = SimulateFinal(semiFinalPobeda);
 
-        Console.WriteLine($"    {team1.Team} - {team2.Team} ({winnerPoints}:{loserPoints})");
-
-        return Tuple.Create(winner, winnerPoints, loserPoints);
+        DisplayMedalWinners(finalResults.Item1, finalResults.Item2, thirdPlaceResults.Item1);
     }
 
-    static Tuple<Timovi, int, int> SimulateThirdPlaceMatch(List<Timovi> semiFinalLosers)
+
+ 
+
+
+    static Tuple<Timovi, Timovi, int, int> SimulateThirdPlaceMatch(List<Timovi> semiFinalLosers)
     {
         Console.WriteLine("\nUtakmica za treće mesto:");
 
-        if (semiFinalLosers.Count != 2)
-        {
-            Console.WriteLine("Greška: Očekivana dva tima za meč za treće mesto.");
-            return null;
-        }
+        var (team1, team2) = (semiFinalLosers[0], semiFinalLosers[1]);
+        var (winner, team1Points, team2Points) = SimulateMatchWithScores(team1, team2);
 
-        var (winner, team1Points, team2Points) = SimulateMatchWithScores(semiFinalLosers[0], semiFinalLosers[1]);
+        Console.WriteLine($"    {team1.Team} - {team2.Team} ({team1Points}:{team2Points})");
 
-        Console.WriteLine($"    {semiFinalLosers[0].Team} - {semiFinalLosers[1].Team} ({team1Points}:{team2Points})");
+        return Tuple.Create(team1Points > team2Points ? team1 : team2, team1Points > team2Points ? team2 : team1, team1Points, team2Points);
+    }
+    static Tuple<Timovi, Timovi, int, int> SimulateFinal(List<Timovi> semiFinalLosers)
+    {
+        Console.WriteLine("\nFinale:");
 
-        return Tuple.Create(winner, team1Points, team2Points);
+       
+        var (team1, team2) = (semiFinalLosers[0], semiFinalLosers[1]);
+        var (winner, team1Points, team2Points) = SimulateMatchWithScores(team1, team2);
+
+        Console.WriteLine($"    {team1.Team} - {team2.Team} ({team1Points}:{team2Points})");
+
+        return Tuple.Create(team1Points > team2Points ? team1 : team2, team1Points > team2Points ? team2 : team1, team1Points, team2Points);
+    }
+    /*
+    static Tuple<Timovi, Timovi, int, int> SimulateFinal(List<Tuple<Timovi, Timovi, int, int>> semiFinalResults)
+    {
+        Console.WriteLine("\nFinale:");
+
+        // Assuming the final is the first match in the list
+        var (team1, team2, _, _) = semiFinalResults[0];
+        var (winner, team1Points, team2Points) = SimulateMatchWithScores(team1, team2);
+
+        Console.WriteLine($"    {team1.Team} - {team2.Team} ({team1Points}:{team2Points})");
+
+        return Tuple.Create(team1Points > team2Points ? team1 : team2, team1Points > team2Points ? team2 : team1, team1Points, team2Points);
+    }
+    */
+
+    static void DisplayMedalWinners(Timovi gold, Timovi silver, Timovi bronze)
+    {
+        Console.WriteLine("\nMedalje:");
+        Console.WriteLine($"    1. {gold.Team}");
+        Console.WriteLine($"    2. {silver.Team}");
+        Console.WriteLine($"    3. {bronze.Team}");
     }
 
     static Tuple<Timovi, int, int> SimulateMatchWithScores(Timovi team1, Timovi team2)
@@ -327,13 +360,7 @@ class Program
         return Tuple.Create(winner, team1Points, team2Points);
     }
 
-    static void DisplayMedalWinners(Timovi gold, Timovi silver, Timovi bronze)
-    {
-        Console.WriteLine("\nMedalje:");
-        Console.WriteLine($"    Zlatna medalja: {gold.Team}");
-        Console.WriteLine($"    Srebrna medalja: {silver.Team}");
-        Console.WriteLine($"    Bronza medalja: {bronze.Team}");
-    }
+
 
     static Timovi SimulateMatch(Timovi team1, Timovi team2)
     {
@@ -343,7 +370,7 @@ class Program
 
         return team1Points > team2Points ? team1 : team2;
     }
-  
+
 
 
 
