@@ -33,6 +33,8 @@ class Program
         // Čitanje JSON fajla
         string jsonString = File.ReadAllText("groups.json");
         Group groups = JsonSerializer.Deserialize<Group>(jsonString);
+      //  string exibitionData = File.ReadAllText("exibitions.json");
+       // Console.WriteLine(jsonString);
 
         // Simulacija podataka za grupe A, B i C
         SimulateGroupStage(groups.A, "A");
@@ -245,11 +247,12 @@ class Program
 
             quarterFinalResults.Add(Tuple.Create(teams[0], teams[1], team1Points, team2Points));
 
-            Console.WriteLine($"    {match.Key}: {teams[0].Team} - {teams[1].Team} ({team1Points}:{team2Points})");
+            Console.WriteLine($"    {teams[0].Team} - {teams[1].Team} ({team1Points}:{team2Points})");
         }
 
         SimulateSemiFinals(quarterFinalResults);
     }
+
 
     static void SimulateSemiFinals(List<Tuple<Timovi, Timovi, int, int>> quarterFinalResults)
     {
@@ -268,11 +271,11 @@ class Program
             semiFinalResults.Add(Tuple.Create(winner, loser, winnerPoints, loserPoints));
             semiFinalLosers.Add(loser);
 
-            Console.WriteLine($"    Polufinale {i / 2 + 1}: {team1.Team} - {team2.Team} ({team1Points}:{team2Points})");
+            Console.WriteLine($"    {team1.Team} - {team2.Team} ({team1Points}:{team2Points})");
         }
         var thirdPlaceWinner = SimulateThirdPlaceMatch(semiFinalLosers);
         var finalWinner = SimulateFinal(semiFinalResults);
-     
+
 
         DisplayMedalWinners(finalWinner.Item1, semiFinalResults.First(t => t.Item1 != finalWinner.Item1).Item1, thirdPlaceWinner.Item1);
     }
@@ -291,14 +294,14 @@ class Program
 
         var (winner, winnerPoints, loserPoints) = SimulateMatchWithScores(team1, team2);
 
-        Console.WriteLine($"    Finale: {team1.Team} - {team2.Team} ({winnerPoints}:{loserPoints})");
+        Console.WriteLine($"    {team1.Team} - {team2.Team} ({winnerPoints}:{loserPoints})");
 
         return Tuple.Create(winner, winnerPoints, loserPoints);
     }
 
     static Tuple<Timovi, int, int> SimulateThirdPlaceMatch(List<Timovi> semiFinalLosers)
     {
-        Console.WriteLine("\nMeč za treće mesto:");
+        Console.WriteLine("\nUtakmica za treće mesto:");
 
         if (semiFinalLosers.Count != 2)
         {
@@ -308,7 +311,7 @@ class Program
 
         var (winner, team1Points, team2Points) = SimulateMatchWithScores(semiFinalLosers[0], semiFinalLosers[1]);
 
-        Console.WriteLine($"    Utakmica za treće mesto: {semiFinalLosers[0].Team} - {semiFinalLosers[1].Team} ({team1Points}:{team2Points})");
+        Console.WriteLine($"    {semiFinalLosers[0].Team} - {semiFinalLosers[1].Team} ({team1Points}:{team2Points})");
 
         return Tuple.Create(winner, team1Points, team2Points);
     }
@@ -340,4 +343,8 @@ class Program
 
         return team1Points > team2Points ? team1 : team2;
     }
+  
+
+
+
 }
