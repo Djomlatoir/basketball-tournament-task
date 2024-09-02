@@ -173,10 +173,10 @@ class Program
             Console.WriteLine($"    {teams[0].Team} - {teams[1].Team} ({team1Points}:{team2Points})");
         }
 
-        Console.WriteLine("\nPobednici četvrtfinala:");
+      //  Console.WriteLine("\nPobednici četvrtfinala:");
         foreach (var winner in quarterFinalWinners)
         {
-            Console.WriteLine($"    {winner.Team}");
+           // Console.WriteLine($"    {winner.Team}");
         }
 
         SimulateSemiFinals(quarterFinalResults);
@@ -296,7 +296,7 @@ class Program
         {
             team1Points = GenerateMatchPoints(team1.FIBARanking);
             team2Points = GenerateMatchPoints(team2.FIBARanking);
-        } while (team1Points == team2Points); 
+        } while (team1Points == team2Points);
 
         winner = team1Points > team2Points ? team1 : team2;
 
