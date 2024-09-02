@@ -39,6 +39,7 @@ class Program
         SimulateGroupStage(groups.B, "B");
         SimulateGroupStage(groups.C, "C");
         // Ispis podataka za grupe A, B i C
+        Console.WriteLine($"\nKonačan plasman u grupama:");
         DisplayGroupStandings(groups.A, "A");
         DisplayGroupStandings(groups.B, "B");
         DisplayGroupStandings(groups.C, "C");
@@ -100,7 +101,7 @@ class Program
     // Ispis podataka za grupe A, B i C
     static void DisplayGroupStandings(List<Timovi> group, string groupName)
     {
-        Console.WriteLine($"\nKonačan plasman u grupama:");
+       //Console.WriteLine($"\nKonačan plasman u grupama:");
         Console.WriteLine($"    Grupa {groupName} (Ime - pobede/porazi/bodovi/postignuti koševi/primljeni koševi/koš razlika):");
 
         var standings = group.OrderByDescending(t => t.Points)
@@ -144,19 +145,19 @@ class Program
             Console.WriteLine($"    Šešir {pot.Key}:");
             foreach (var team in pot.Value)
             {
-                Console.WriteLine($"        {team.Team} - Grupa: {team.GroupName}");
+                Console.WriteLine($"        {team.Team} ");
             }
         }
 
         Random rnd = new Random();
         List<Tuple<Timovi, Timovi>> quarterfinals = new List<Tuple<Timovi, Timovi>>();
 
-        Console.WriteLine("\nFormiranje četvrtfinala:");
+       // Console.WriteLine("\nFormiranje četvrtfinala:");
         while (pots["D"].Count > 0 && pots["G"].Count > 0)
         {
             if (pots["D"].Count == 0 || pots["G"].Count == 0)
             {
-                Console.WriteLine("Nema dovoljno timova za formiranje mečeva u grupama D i G.");
+           //     Console.WriteLine("Nema dovoljno timova za formiranje mečeva u grupama D i G.");
                 break;
             }
 
@@ -168,12 +169,12 @@ class Program
                 quarterfinals.Add(Tuple.Create(teamD, teamG));
                 pots["D"].Remove(teamD);
                 pots["G"].Remove(teamG);
-                Console.WriteLine($"    {teamD.Team} vs {teamG.Team}");
+              //  Console.WriteLine($"    {teamD.Team} vs {teamG.Team}");
             }
             else
             {
                 // Ova linija može dovesti do problema ako su u istom potu
-                Console.WriteLine($"    Izbegnuta grupa rematch: {teamD.Team} i {teamG.Team} - Grupa: {teamD.GroupName}");
+               // Console.WriteLine($"    Izbegnuta grupa rematch: {teamD.Team} i {teamG.Team} - Grupa: {teamD.GroupName}");
                 break;
             }
         }
@@ -194,7 +195,7 @@ class Program
                 quarterfinals.Add(Tuple.Create(teamE, teamF));
                 pots["E"].Remove(teamE);
                 pots["F"].Remove(teamF);
-                Console.WriteLine($"    {teamE.Team} vs {teamF.Team}");
+            //    Console.WriteLine($"    {teamE.Team} vs {teamF.Team}");
             }
             else
             {
@@ -205,7 +206,7 @@ class Program
             }
         }
 
-        Console.WriteLine("\nEliminaciona faza:");
+       // Console.WriteLine("\nEliminaciona faza:");
         Dictionary<string, List<Timovi>> eliminationMatches = new Dictionary<string, List<Timovi>>();
         char matchLabel = 'A';
 
